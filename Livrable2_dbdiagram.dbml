@@ -1,0 +1,113 @@
+// Commerces+ : schéma de la base de données (à coller sur https://dbdiagram.io)
+
+Table commerce {
+  id_commerce int [pk, increment]
+  nom varchar(100) [not null]
+  activite varchar(100) [not null]
+  adresse varchar(255) [not null]
+  num_ligne varchar(20) [not null]
+  num_renvoi varchar(20) [not null, unique]
+  message_accueil text [not null]
+  ton_reponses varchar(20) [not null, note: 'chaleureux, professionnel ou concis']
+  repondeur_actif boolean [not null, default: true]
+}
+
+Table utilisateur {
+  id_utilisateur int [pk, increment]
+  nom varchar(100) [not null]
+  email varchar(255) [not null, unique]
+  mot_de_passe_hache varchar(255) [not null]
+  role varchar(20) [not null, note: 'commercant ou admin']
+  tentatives_echouees int [not null, default: 0]
+  derniere_connexion datetime
+  id_commerce int [ref: > commerce.id_commerce, note: 'vide pour un administrateur']
+}
+
+Table abonnement {
+  id_abonnement int [pk, increment]
+  formule varchar(50) [not null]
+  etat varchar(20) [not null, note: 'actif ou suspendu']
+  date_debut date [not null]
+  date_fin date
+  id_commerce int [not null, unique, ref: - commerce.id_commerce]
+}
+
+Table horaire {
+  id_horaire int [pk, increment]
+  jour tinyint [not null, note: '1 = lundi ... 7 = dimanche']
+  heure_ouverture time [not null]
+  heure_fermeture time [not null]
+  id_commerce int [not null, ref: > commerce.id_commerce]
+}
+
+Table fermeture {
+  id_fermeture int [pk, increment]
+  date_fermeture date [not null]
+  motif varchar(255)
+  id_commerce int [not null, ref: > commerce.id_commerce]
+}
+
+Table plage_rdv {
+  id_plage int [pk, increment]
+  jour tinyint [not null]
+  heure_debut time [not null]
+  heure_fin time [not null]
+  duree_creneau int [not null, note: 'en minutes']
+  id_commerce int [not null, ref: > commerce.id_commerce]
+}
+
+Table question_frequente {
+  id_question int [pk, increment]
+  question varchar(255) [not null]
+  reponse text [not null]
+  id_commerce int [not null, ref: > commerce.id_commerce]
+}
+
+Table service {
+  id_service int [pk, increment]
+  nom varchar(100) [not null]
+  description text
+  prix decimal(8,2)
+  duree int [note: 'en minutes, obligatoire si reservable']
+  reservable boolean [not null, default: false]
+  id_commerce int [not null, ref: > commerce.id_commerce]
+}
+
+Table appel {
+  id_appel int [pk, increment]
+  id_operateur varchar(64) [not null, unique]
+  date_heure datetime [not null]
+  duree int [not null, note: 'en secondes']
+  numero_appelant varchar(20) [not null]
+  transcription text [not null]
+  resume text [not null]
+  statut varchar(20) [not null, note: 'rdv_pris, renseigne, message ou a_rappeler']
+  traite boolean [not null, default: false]
+  fichier_audio varchar(255)
+  date_suppression date [not null]
+  id_commerce int [not null, ref: > commerce.id_commerce]
+}
+
+Table rendez_vous {
+  id_rdv int [pk, increment]
+  date_debut datetime [not null]
+  date_fin datetime [not null]
+  nom_client varchar(100) [not null]
+  telephone_client varchar(20) [not null]
+  statut varchar(20) [not null, note: 'a_confirmer, confirme ou annule']
+  origine varchar(20) [not null, note: 'repondeur ou manuel']
+  note text
+  id_commerce int [not null, ref: > commerce.id_commerce]
+  id_service int [ref: > service.id_service]
+  id_appel int [unique, ref: - appel.id_appel]
+}
+
+Table demande_demo {
+  id_demande int [pk, increment]
+  nom_commerce varchar(100) [not null]
+  activite varchar(100)
+  email varchar(255) [not null]
+  telephone varchar(20)
+  consentement boolean [not null]
+  date_demande datetime [not null]
+}
